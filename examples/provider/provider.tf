@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     eighthundred = {
-      source  = "ziinc/eighthundred"
+      source  = "ziinc-studio/eighthundred"
       version = "~> 0.1"
     }
   }
