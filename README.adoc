@@ -1,0 +1,130 @@
+= terraform-provider-eighthundred
+:icons: font
+
+A Terraform provider for the https://www.800.com[800.com] public REST
+API. Lets you manage 800.com webhooks, contacts, contact lists, custom
+attributes, calendars, AI agents, knowledge-base documents, number
+templates, and toll-free numbers as Terraform resources.
+
+[NOTE]
+====
+*Status: scaffolding.* See link:PHASED-EXECUTION.adoc[PHASED-EXECUTION.adoc]
+for what's implemented vs. planned. Phase 2 ships
+`eight_hundred_webhook` end-to-end as the reference resource.
+====
+
+== Why a provider, not a module?
+
+Terraform _modules_ are pure HCL that compose existing providers; a
+_provider_ is the Go binary that talks to a remote API. No 800.com
+provider exists upstream, so this repository delivers one. HCL
+convenience modules (Phase 6) will live under `modules/` once the
+provider stabilises.
+
+== Quick start
+
+[source,hcl]
+----
+terraform {
+  required_providers {
+    eighthundred = {
+      source  = "ziinc/eighthundred"
+      version = "~> 0.1"
+    }
+  }
+}
+
+provider "eighthundred" {
+  # token is read from EIGHT_HUNDRED_API_TOKEN if omitted
+  default_company_id = 334176
+}
+
+resource "eight_hundred_webhook" "sms_received" {
+  url      = "https://hooks.example.com/inbound-sms"
+  method   = "POST"
+  features = ["sms_received"]
+}
+----
+
+[source,sh]
+----
+export EIGHT_HUNDRED_API_TOKEN='377187|<your-token>'
+terraform init
+terraform apply
+----
+
+== Provider configuration
+
+[cols="1,1,4", options="header"]
+|===
+| Attribute | Type | Description
+
+| `endpoint`
+| string
+| Defaults to `https://api.800.com`. Override for staging/dev.
+
+| `token`
+| string (sensitive)
+| Personal Access Token from 800.com User Settings. Falls back to the
+`EIGHT_HUNDRED_API_TOKEN` env var.
+
+| `default_company_id`
+| number
+| Used by company-scoped resources when their `company_id` is omitted.
+
+| `max_retries`
+| number
+| Retries on `429`/`5xx`. Default `3`.
+
+| `request_timeout_seconds`
+| number
+| Per-request HTTP timeout. Default `30`.
+|===
+
+== Repository layout
+
+[source]
+----
+internal/provider/      Go source (provider, resources, data sources, client)
+examples/               HCL examples consumed by tfplugindocs
+docs/                   Generated docs (do not hand-edit)
+public.v2.swagger.yml   Vendored upstream API spec
+PHASED-EXECUTION.adoc   Plan, scope, and discovery notes
+AGENTS.md               Repo conventions for contributors and agents
+----
+
+== Local development
+
+[source,sh]
+----
+make install      # build and put into $GOPATH/bin with a dev override
+make test         # unit tests
+make testacc      # acceptance tests (requires EIGHT_HUNDRED_API_TOKEN)
+make docs         # regenerate docs/
+----
+
+== Resources & data sources
+
+See link:PHASED-EXECUTION.adoc[PHASED-EXECUTION.adoc §"Resource
+classification"] for the full target list. Roadmap:
+
+* *Phase 2 (current)*: `eight_hundred_webhook`, `eight_hundred_number_template`,
+  `eight_hundred_companies` (DS), `eight_hundred_users` (DS).
+* *Phase 3*: contacts, contact lists, EAV attributes, calendars, knowledge docs.
+* *Phase 4*: AI agents, call analytics DS, calls/conversations DS, *paid* numbers.
+
+== Caveats
+
+* *Paid resource*: `eight_hundred_number` purchases real toll-free
+  numbers and `terraform destroy` releases them. Treat with
+  `prevent_destroy = true`. Acceptance tests are gated and cost money.
+* *Rate limit*: 800.com enforces a per-minute rate limit (server
+  reports 180/min in current testing). The client reads the
+  `X-RateLimit-*` headers and respects `Retry-After` on `429`.
+* *Spec drift*: a handful of documented paths return `404` in
+  production (e.g. `/v1/users`). The vendored spec is a reference, not
+  a contract — live behaviour wins.
+
+== Licence
+
+Apache-2.0 (proposed). Update `LICENSE` before publishing.

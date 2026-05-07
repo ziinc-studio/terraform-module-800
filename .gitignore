@@ -1,0 +1,41 @@
+# Build artifacts
+bin/
+dist/
+terraform-provider-eighthundred
+terraform-provider-eighthundred_v*
+
+# Go
+*.test
+*.out
+coverage.txt
+vendor/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Secrets — never commit tokens
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local dev override for Terraform plugin discovery
+.terraformrc
+~/.terraformrc
+dev-overrides.tfrc
