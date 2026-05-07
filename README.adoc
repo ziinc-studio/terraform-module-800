@@ -1,4 +1,4 @@
-= terraform-provider-eighthundred
+= terraform-provider-800
 :icons: font
 
 A Terraform provider for the https://www.800.com[800.com] public REST
@@ -28,7 +28,7 @@ provider stabilises.
 terraform {
   required_providers {
     eighthundred = {
-      source  = "ziinc/eighthundred"
+      source  = "ziinc-studio/800"
       version = "~> 0.1"
     }
   }
